@@ -2941,6 +2941,68 @@ trait Sharing {
 	}
 
 	/**
+	 * @param string $user
+	 * @param string $sharer
+	 * @param string $server
+	 * @param string $password
+	 *
+	 * @return void
+     */
+	public function saveLastSharedPublicLinkShare(
+		$user,
+		$sharer,
+		$server = "LOCAL",
+		$password = ""
+	) {
+		$user = $this->getActualUsername($user);
+		$owner = $this->getActualUsername($sharer);
+
+		$shareData = $this->getLastShareData();
+		$name = $this->encodePath((string) $shareData->data->file_target);
+		$name = \trim($name, "/");
+		$ownerDisplayName = (string) $shareData->data->displayname_owner;
+		$token = (string) $shareData->data->token;
+
+		if (\strtolower($server) == "remote") {
+			$remote = $this->getRemoteBaseUrl();
+		} else {
+			$remote = $this->getLocalBaseUrl();
+		}
+
+		$body['remote'] = $remote;
+		$body['token'] = $token;
+		$body['owner'] = $owner;
+		$body['ownerDisplayName'] = $ownerDisplayName;
+		$body['name'] = $name;
+		$body['password'] = $password;
+
+		Assert::assertNotNull(
+			$token,
+			__METHOD__ . " could not find public share with token '$token', shared by $sharer"
+		);
+
+		$url = "/index.php/apps/files_sharing/external";
+
+		$this->ocsContext->userSendsHTTPMethodToOcsApiEndpointWithBody(
+			$user, "POST", $url, $body
+		);
+	}
+
+	/**
+     * @When /^user "([^"]*)" from server "([^"]*)" adds public share created by user "([^"]*)" from local server$/
+	 * 
+	 * @param string $user
+	 * @param string $server
+	 * @param string $sharer
+	 *
+	 * @return void
+     */
+    public function userAddsPublicShareCreatedByUser($user, $server, $sharer)
+    {
+        $this->saveLastSharedPublicLinkShare($user, $sharer, $server);
+    }
+
+	/**
 	 * replace values from table
 	 *
 	 * @param string $field
