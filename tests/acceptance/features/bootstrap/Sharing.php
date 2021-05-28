@@ -2950,26 +2950,26 @@ trait Sharing {
      */
 	public function saveLastSharedPublicLinkShare(
 		$user,
-		$sharer,
 		$server = "LOCAL",
 		$password = ""
 	) {
 		$user = $this->getActualUsername($user);
-		$owner = $this->getActualUsername($sharer);
+		$userPassword = $this->getPasswordForUser($user);
 
 		$shareData = $this->getLastShareData();
+		$owner = (string) $shareData->data->uid_owner;
 		$name = $this->encodePath((string) $shareData->data->file_target);
 		$name = \trim($name, "/");
 		$ownerDisplayName = (string) $shareData->data->displayname_owner;
 		$token = (string) $shareData->data->token;
 
 		if (\strtolower($server) == "remote") {
-			$remote = $this->getRemoteBaseUrl();
+			$baseUrl = $this->getRemoteBaseUrl();
 		} else {
-			$remote = $this->getLocalBaseUrl();
+			$baseUrl = $this->getLocalBaseUrl();
 		}
 
-		$body['remote'] = $remote;
+		$body['remote'] = $this->getLocalBaseUrl();
 		$body['token'] = $token;
 		$body['owner'] = $owner;
 		$body['ownerDisplayName'] = $ownerDisplayName;
@@ -2978,28 +2978,27 @@ trait Sharing {
 
 		Assert::assertNotNull(
 			$token,
-			__METHOD__ . " could not find public share with token '$token', shared by $sharer"
+			__METHOD__ . " could not find public share with token '$token'"
 		);
 
-		$url = "/index.php/apps/files_sharing/external";
+		$url = $baseUrl . "/index.php/apps/files_sharing/external";
 
-		$this->ocsContext->userSendsHTTPMethodToOcsApiEndpointWithBody(
-			$user, "POST", $url, $body
-		);
+		$response = HttpRequestHelper::post($url, $user, $userPassword, null, $body);
+		print_r($response);
+		$this->setResponse($response);
 	}
 
 	/**
-     * @When /^user "([^"]*)" from server "([^"]*)" adds public share created by user "([^"]*)" from local server$/
+     * @When /^user "([^"]*)" from server "([^"]*)" adds the last created public share$/
 	 * 
 	 * @param string $user
 	 * @param string $server
-	 * @param string $sharer
 	 *
 	 * @return void
      */
-    public function userAddsPublicShareCreatedByUser($user, $server, $sharer)
+    public function userAddsPublicShareCreatedByUser($user, $server)
     {
-        $this->saveLastSharedPublicLinkShare($user, $sharer, $server);
+        $this->saveLastSharedPublicLinkShare($user, $server);
     }
 
 	/**
