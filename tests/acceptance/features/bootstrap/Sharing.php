@@ -959,6 +959,7 @@ trait Sharing {
 		} else {
 			$this->lastShareData = $this->getResponseXml(null, __METHOD__);
 			if ($shareType === 'public_link' && isset($this->lastShareData->data)) {
+				echo $this->lastShareData->data->token;
 				$linkName = (string) $this->lastShareData->data[0]->name;
 				$linkUrl = (string) $this->lastShareData->data[0]->url;
 				$this->addToListOfCreatedPublicLinks($linkName, $linkUrl);
@@ -2942,15 +2943,14 @@ trait Sharing {
 
 	/**
 	 * @param string $user
-	 * @param string $sharer
-	 * @param string $server
+	 * @param string $shareServer
 	 * @param string $password
 	 *
 	 * @return void
-     */
+	 */
 	public function saveLastSharedPublicLinkShare(
 		$user,
-		$server = "LOCAL",
+		$shareServer,
 		$password = ""
 	) {
 		$user = $this->getActualUsername($user);
@@ -2963,43 +2963,44 @@ trait Sharing {
 		$ownerDisplayName = (string) $shareData->data->displayname_owner;
 		$token = (string) $shareData->data->token;
 
-		if (\strtolower($server) == "remote") {
-			$baseUrl = $this->getRemoteBaseUrl();
+		if (\strtolower($shareServer) == "remote") {
+			$remote = $this->getRemoteBaseUrl();
 		} else {
-			$baseUrl = $this->getLocalBaseUrl();
+			$remote = $this->getLocalBaseUrl();
 		}
 
-		$body['remote'] = $this->getLocalBaseUrl();
+		$body['remote'] = $remote;
 		$body['token'] = $token;
 		$body['owner'] = $owner;
 		$body['ownerDisplayName'] = $ownerDisplayName;
 		$body['name'] = $name;
 		$body['password'] = $password;
 
+		echo $token;
+
 		Assert::assertNotNull(
 			$token,
-			__METHOD__ . " could not find public share with token '$token'"
+			__METHOD__ . " could not find any public share"
 		);
 
-		$url = $baseUrl . "/index.php/apps/files_sharing/external";
+		$url = $this->getBaseUrl() . "/index.php/apps/files_sharing/external";
 
 		$response = HttpRequestHelper::post($url, $user, $userPassword, null, $body);
-		print_r($response);
+		// var_dump($response);
 		$this->setResponse($response);
 	}
 
 	/**
-     * @When /^user "([^"]*)" from server "([^"]*)" adds the last created public share$/
-	 * 
+	 * @When /^user "([^"]*)" adds the public share created from server "([^"]*)" using the API$/
+	 *
 	 * @param string $user
-	 * @param string $server
+	 * @param string $shareServer
 	 *
 	 * @return void
-     */
-    public function userAddsPublicShareCreatedByUser($user, $server)
-    {
-        $this->saveLastSharedPublicLinkShare($user, $server);
-    }
+	 */
+	public function userAddsPublicShareCreatedByUser($user, $shareServer) {
+		$this->saveLastSharedPublicLinkShare($user, $shareServer);
+	}
 
 	/**
 	 * replace values from table

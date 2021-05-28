@@ -26,7 +26,8 @@ config = {
 		'allDatabases' : {
 			'phpVersions': [
 				'7.2',
-			]
+			],
+			'skip': True
 		},
 		'reducedDatabases' : {
 			'phpVersions': [
@@ -36,7 +37,8 @@ config = {
 			'databases': [
 				'sqlite',
 				'mariadb:10.2',
-			]
+			],
+			'skip': True
 		},
 		'external-samba-windows' : {
 			'phpVersions': [
@@ -56,7 +58,8 @@ config = {
 				'mkdir /var/cache/samba',
 				'ls -l /var/cache',
 				'ls -l /var/cache/samba',
-			]
+			],
+			'skip': True
 		},
 		'external-other' : {
 			'phpVersions': [
@@ -73,6 +76,7 @@ config = {
 				'owncloud',
 			],
 			'coverage': True,
+			'skip': True
 		}
 	},
 
@@ -130,6 +134,7 @@ config = {
 				'apiWebdavUpload1',
 				'apiWebdavUpload2',
 			],
+			'skip': True
 		},
 		'apiNotifications': {
 			'suites': [
@@ -139,16 +144,17 @@ config = {
 			'extraApps': {
 				'notifications': 'if [ -f "composer.json" ]; then composer install; fi',
 			},
+			'skip': True
 		},
 		'apiFederation': {
 			'suites': [
 				'apiFederationToRoot1',
-				'apiFederationToRoot2',
-				'apiFederationToShares1',
-				'apiFederationToShares2',
+				# 'apiFederationToRoot2',
+				# 'apiFederationToShares1',
+				# 'apiFederationToShares2',
 			],
 			'federatedServerNeeded': True,
-			'federatedServerVersions': ['git', 'latest', '10.5.0'],
+			'federatedServerVersions': ['git'],
 		},
 		'cli': {
 			'suites': [
@@ -159,12 +165,14 @@ config = {
 				'cliTrashbin',
 			],
 			'emailNeeded': True,
+			'skip': True
 		},
 		'cliAppManagement': {
 			'suites': [
 				'cliAppManagement',
 			],
 			'testingRemoteSystem': False,
+			'skip': True
 		},
 		'cliExternalStorage': {
 			'suites': [
@@ -172,6 +180,7 @@ config = {
 			],
 			'federatedServerNeeded': True,
 			'federatedServerVersions': ['git', 'latest', '10.5.0'],
+			'skip': True
 		},
 		'webUI': {
 			'suites': {
@@ -207,6 +216,7 @@ config = {
 			},
 			'emailNeeded': True,
 			'useHttps': False,
+			'skip': True
 		},
 		'webUINotifications': {
 			'suites': {
@@ -217,6 +227,7 @@ config = {
 			'extraApps': {
 				'notifications': 'composer install',
 			},
+			'skip': True
 		},
 		'webUIFileActionsMenu': {
 			'suites': {
@@ -227,6 +238,7 @@ config = {
 				'files_texteditor': 'make vendor',
 				'richdocuments': 'make vendor',
 			},
+			'skip': True
 		},
 		'webUIFederation': {
 			'suites': {
@@ -235,6 +247,7 @@ config = {
 			},
 			'federatedServerNeeded': True,
 			'federatedServerVersions': ['git', 'latest', '10.5.0'],
+			'skip': True
 		},
 		'webUIFirefox': {
 			'suites': {
@@ -248,6 +261,7 @@ config = {
 			'filterTags': '@smokeTest&&~@notifications-app-required',
 			'runAllSuites': True,
 			'numberOfParts': 3,
+			'skip': True
 		},
 		'webUIProxy': {
 			'suites': {
@@ -262,6 +276,7 @@ config = {
 			'filterTags': '@smokeTest&&~@notifications-app-required',
 			'runAllSuites': True,
 			'numberOfParts': 3,
+			'skip': True
 		},
 		'apiProxy': {
 			'suites': {
@@ -272,6 +287,7 @@ config = {
 			'filterTags': '@smokeTest&&~@notifications-app-required',
 			'runAllSuites': True,
 			'numberOfParts': 8,
+			'skip': True
 		},
 		'apiOnSqlite': {
 			'suites': {
@@ -281,6 +297,7 @@ config = {
 			'useHttps': False,
 			'filterTags': '@sqliteDB',
 			'runAllSuites': True,
+			'skip': True
 		}
 	}
 }
@@ -288,30 +305,32 @@ config = {
 def main(ctx):
 	initial = initialPipelines(ctx)
 
-	before = beforePipelines(ctx)
-	dependsOn(initial, before)
+	# before = beforePipelines(ctx)
+	# dependsOn(initial, before)
 
-	coverageTests = coveragePipelines(ctx)
-	if (coverageTests == False):
-		print('Errors detected in coveragePipelines. Review messages above.')
-		return []
+	# coverageTests = coveragePipelines(ctx)
+	# if (coverageTests == False):
+	# 	print('Errors detected in coveragePipelines. Review messages above.')
+	# 	return []
 
-	dependsOn(before, coverageTests)
+	# dependsOn(before, coverageTests)
 
 	stages = stagePipelines(ctx)
 	if (stages == False):
 		print('Errors detected in stagePipelines. Review messages above.')
 		return []
 
-	dependsOn(before, stages)
+	# dependsOn(before, stages)
+	dependsOn(initial, stages)
 
-	afterCoverageTests = afterCoveragePipelines(ctx)
-	dependsOn(coverageTests, afterCoverageTests)
+	# afterCoverageTests = afterCoveragePipelines(ctx)
+	# dependsOn(coverageTests, afterCoverageTests)
 
-	after = afterPipelines(ctx)
-	dependsOn(afterCoverageTests + stages, after)
+	# after = afterPipelines(ctx)
+	# dependsOn(afterCoverageTests + stages, after)
 
-	return initial + before + coverageTests + afterCoverageTests + stages + after
+	# return initial + before + coverageTests + afterCoverageTests + stages + after
+	return initial + stages
 
 def initialPipelines(ctx):
 	return dependencies(ctx)
@@ -337,7 +356,8 @@ def stagePipelines(ctx):
 	if (litmusPipelines == False) or (davPipelines == False) or (acceptancePipelines == False):
 		return False
 
-	return litmusPipelines + davPipelines + acceptancePipelines
+	# return litmusPipelines + davPipelines + acceptancePipelines
+	return acceptancePipelines
 
 def afterCoveragePipelines(ctx):
 	return [
